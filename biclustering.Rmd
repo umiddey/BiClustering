@@ -1,0 +1,148 @@
+---
+title: "Bi-Clustering"
+author: "Umid Dey"
+date: "17/8/2021"
+output: pdf_document
+---
+
+```{r}
+
+
+
+a_list_calc <- function(matr) {
+  
+  mu <-(1/( nrow(matr)*ncol(matr)))*(sum(matr))
+  a_list <- vector(mode = "numeric", length = nrow(matr))
+  
+  
+  for(i in 1:nrow(matr)){
+    
+    rsum <- 0
+    for(j in 1:ncol(matr)) {
+      
+      temp <- matr[i,j] - mu
+ 
+      rsum <- rsum + temp 
+      
+    }
+  
+    a_list[i] <- (1/ncol(matr))*(rsum)
+    
+    
+  }
+  
+  return(a_list)
+}
+
+
+  
+b_list_calc <- function(matr) {
+  
+  mu <-(1/( nrow(matr)*ncol(matr)))*(sum(matr))
+  b_list <- vector(mode = "numeric", length = ncol(matr))
+  for(i in 1:ncol(matr)){
+    rsum <- 0
+ 
+    for(j in 1:nrow(matr)) {
+
+      temp <- matr[j,i] - mu
+      rsum <- rsum + temp 
+
+      
+    }
+    
+    b_list[i] <- (1/nrow(matr))*(rsum)
+  }
+  
+  return(b_list)
+}
+  
+  
+e_list_calc <- function(matr) {
+  
+  e_list <- matrix(NA, nrow = nrow(matr), ncol = ncol(matr))
+  
+  a_list <- a_list_calc(matr)
+  b_list <- b_list_calc(matr)
+  mu <-(1/( nrow(matr)*ncol(matr)))*(sum(matr))
+  
+  for(i in 1:nrow(matr)){
+    
+    for(j in 1:ncol(matr)) {
+
+      temp <- matr[i,j] - (mu + a_list[i] + b_list[j])
+      
+      e_list[i,j] <- temp
+      
+    }
+    
+  }
+  
+  
+  return(e_list)
+}
+
+
+
+h_finder <- function(matr) {
+  e_list <- e_list_calc(matr)
+  return(sum(e_list^2)/(nrow(matr)*ncol(matr)))
+}
+
+clust <- function(matr, b) {
+  
+  print("Original matrix:") 
+  print(matr)
+  h <- h_finder(matr)
+  
+  del_row <- 0 
+  del_col <- 0 
+  while(h > b) {
+    
+    cat('H = ', h, 'mu = ', (1/( nrow(matr)*ncol(matr)))*(sum(matr)), '\n')
+    e_list <- e_list_calc(matr)
+    maxrow <- max(rowSums(e_list^2)/ncol(matr))
+    maxcol <- max(colSums(e_list^2)/nrow(matr))
+    if ( maxrow > maxcol ) {
+      
+      del_row <- which.max(rowSums(e_list^2)/nrow(matr))
+      matr <- matr[-(del_row),]
+      cat("Row number", del_row, " deleted \n")
+      
+    } else {
+      del_col <- which.max(colSums(e_list^2)/nrow(matr))
+      matr <- matr[,-(del_col)]
+      cat("Column number", del_col, " deleted \n")
+    } 
+    
+    h<- h_finder(matr)
+    print(matr)
+    
+  
+  }
+  
+  if(h<b) {
+
+    cat('H is now', h,'- which is below the threshold', b, '- hence the matrix above is optimal \n')
+  }
+  
+
+}
+
+
+
+matx <- matrix(c(2.03, 1.99, 2.98, 4.21, 4.93, 
+                 1.82, 3.09, 3.95, 4.98, 9.99,
+                 6.03, 2.41, 7.95, 9.01, 10.09, 
+                 4.00, 8.08, 8.32, 10.03, 14.96, 
+                 3.90, 3.06, 2.73, 3.09, 2.98,
+                 4.94, 4.08, 3.13, 1.99, 1.77), 
+           nrow=6, ncol = 5, byrow = TRUE)
+
+
+clust(matx, 0.1)
+
+
+
+```
+
